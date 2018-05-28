@@ -45,13 +45,14 @@ export default class Exec {
     this.mem.requests = [];
   }
 
-  try(code) {
+  try(code, _f_ = {}) {
     const payload = {
       mem: this.mem,
       sys: this.sys,
       _,
       colors: Colors,
-      exec: this
+      exec: this,
+      _f_
     };
     return Function(`return ( ({${_.keys(payload).join(',')}}) => { return (${code}) } );`)()(
       payload
@@ -67,7 +68,7 @@ export default class Exec {
     this.mem.env = env;
     this.mem.last_callback = new Date().getTime();
     this.mem.requests = this.mem.requests.concat(
-      _.filter(_.map(responses, this.try.bind(this)), !_.isNil)
+      _.filter(_.map(responses, r => this.try(r.c, r.f)), !_.isNil)
     );
   }
 
