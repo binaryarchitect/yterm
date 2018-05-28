@@ -24,6 +24,7 @@ export default class Emulator {
   }
 
   shift(key, dir) {
+    const { term, buffer } = this.scope;
     buffer.move(dir);
     if (bufer.move(dir) !== 0) term.write(key);
   }

@@ -26,7 +26,7 @@ const term = new Terminal({
   fontFamily: 'Lucida Console, monospace'
 });
 
-const conzole = new Conzole();
+const conzole = new Conzole(false);
 const pastep = new PastePoint();
 const poller = new HttpPoller();
 const buffer = new Buffer();
@@ -48,13 +48,23 @@ const systemLib = {
   connect(addr) {
     term.write('Connecting...');
     poller.start(addr);
+  },
+  disconnect() {
+    poller.stop();
   }
 };
 
+poller.generator(() => {
+  return JSON.stringify({
+    q: 'poll',
+    r: []
+  });
+});
+
 // Return from poller
-window._callback = () => {
-  console.info(arguments);
-  conzole.write(arguments);
+window._callback = ({ agents, responses, env }) => {
+  exec.mem.set('agents', agents);
+  exec.mem.set('env', env);
 };
 
 const exec = new Exec(systemLib);

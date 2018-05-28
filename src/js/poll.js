@@ -1,21 +1,37 @@
 export default class HttpPoller {
-  constructor() {
+  constructor(payload) {
     this.timer = -1;
+    this.generator(payload);
   }
 
   start(addr) {
-    clearInterval(timer);
-    this.timer = setInterval(this.tick.bind(this, addr), 5000);
+    clearInterval(this.timer);
+    this.timer = setInterval(this.tick.bind(this, addr), 1000);
+  }
+
+  stop() {
+    clearInterval(this.timer);
+  }
+
+  generator(payload = () => {}) {
+    this.payload = payload;
   }
 
   tick(addr) {
     const script = document.createElement('script');
-    script.onload = this.loaded.bind(this, script);
+    const timeout = setTimeout(this.timeout.bind(this, script), 2000);
+    script.onload = this.loaded.bind(this, script, timeout);
     document.body.appendChild(script);
-    script.src = addr;
+    script.src = addr + '/?' + escape(this.payload());
   }
 
-  loaded(script) {
+  timeout(script) {
+    script.remove();
+    (window._callback || (() => {}))(null, new Error('Connection timed out'));
+  }
+
+  loaded(script, timeout) {
+    clearTimeout(timeout);
     script.remove();
   }
 }
