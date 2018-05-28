@@ -54,13 +54,13 @@ class Network {
   }
 
   connect(addr) {
-    sys.echo('Connecting...');
+    sys.log('Connecting...');
     this.poller.start(addr);
     this.cb_id = this.poller.callback(this.tick.bind(this));
   }
 
   disconnect() {
-    sys.echo('Disconnecting...');
+    sys.log('Disconnecting...');
     this.poller.stop();
     this.poller.manager.removeCallback(this.cb_id);
     this.connected = false;

@@ -17,6 +17,10 @@ class SystemLibrary {
     return undefined;
   }
 
+  log(text) {
+    this.emu._out(text);
+  }
+
   echo(text) {
     this.emu.write(text);
   }
