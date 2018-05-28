@@ -1,4 +1,5 @@
 import Colors from './colors';
+import Unicode from './unicode';
 
 export default class Emulator {
   constructor(term, buffer) {
@@ -17,7 +18,12 @@ export default class Emulator {
     };
   }
 
-  write(value) {
+  _out(value) {
+    const { term } = this.scope;
+    term.write(value);
+  }
+
+  _write(value) {
     const { term, buffer } = this.scope;
     buffer.write(value);
     term.write(value);
@@ -27,6 +33,19 @@ export default class Emulator {
     const { term, buffer } = this.scope;
     buffer.move(dir);
     if (bufer.move(dir) !== 0) term.write(key);
+  }
+
+  prompt() {
+    const { term, buffer } = this.scope;
+    term.write('\r\n');
+    term.write(this.prefix);
+    term.write(buffer.get());
+    return this;
+  }
+
+  focus() {
+    this.scope.term.focus();
+    return this;
   }
 
   return(then) {
@@ -46,7 +65,11 @@ export default class Emulator {
     } catch (e) {
       term.write([Colors.RED, 'Error: ' + e.message, Colors.NC].join(''));
     }
-    term.write('\r\n');
-    term.write(this.prefix);
+    this.prompt();
+  }
+
+  write(value) {
+    this._out(Unicode.clearLine + value);
+    this.prompt();
   }
 }

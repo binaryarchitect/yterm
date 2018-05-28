@@ -11,6 +11,8 @@ import HttpPoller from './js/poll';
 import PastePoint from './js/pastepoint';
 import Emulator from './js/emulator';
 import Conzole from './js/conzole';
+import getQueryVariable from './js/qs';
+import SystemLibrary from './js/system';
 
 //Style
 import './sass/index.scss';
@@ -28,54 +30,59 @@ const term = new Terminal({
 
 const conzole = new Conzole(false);
 const pastep = new PastePoint();
-const poller = new HttpPoller();
 const buffer = new Buffer();
 const emu = new Emulator(term, buffer);
+const sys = new SystemLibrary(emu);
 
-const systemLib = {
-  _main_: {
-    term,
-    buffer
-  },
-  clear() {
-    term.clear();
-    buffer.flush();
-    return undefined;
-  },
-  echo(text) {
-    term.write(text);
-  },
-  connect(addr) {
-    term.write('Connecting...');
-    poller.start(addr);
-  },
-  disconnect() {
-    poller.stop();
+class Network {
+  constructor() {
+    this.poller = new HttpPoller(this.__generator.bind(this));
+    this.connected = false;
+    this.generator = undefined;
   }
-};
 
-poller.generator(() => {
-  return JSON.stringify({
-    q: 'poll',
-    r: []
-  });
-});
+  set generator(gen = () => {}) {
+    this._generator = gen;
+  }
 
-// Return from poller
-window._callback = ({ agents, responses, env }) => {
-  exec.mem.set('agents', agents);
-  exec.mem.set('env', env);
-};
+  set callback(cb) {
+    this.poller.callback(cb);
+  }
 
-const exec = new Exec(systemLib);
+  __generator() {
+    return this._generator();
+  }
+
+  connect(addr) {
+    sys.echo('Connecting...');
+    this.poller.start(addr);
+    this.cb_id = this.poller.callback(this.tick.bind(this));
+  }
+
+  disconnect() {
+    sys.echo('Disconnecting...');
+    this.poller.stop();
+    this.poller.manager.removeCallback(this.cb_id);
+    this.connected = false;
+  }
+
+  tick(result) {
+    if (result !== undefined) {
+      if (!this.connected) sys.echo('Connected!');
+      this.connected = true;
+    }
+  }
+}
+
+sys.network = new Network();
+const exec = new Exec(sys);
 
 term.open(document.getElementById('terminal'));
 term.fit();
-term.write('$ ');
 
 pastep.handler(chain => {
   return chain.then(value => {
-    emu.write(value);
+    emu._write(value);
     term.focus();
   });
 });
@@ -110,7 +117,14 @@ term.on('key', (key, ev) => {
     //write
     const printable = !ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey;
     if (printable) {
-      emu.write(key);
+      emu._write(key);
     }
   }
 });
+
+const url = getQueryVariable('url');
+if (url) {
+  sys.network.connect(url);
+}
+
+emu.prompt().focus();

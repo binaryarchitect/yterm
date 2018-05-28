@@ -1,4 +1,4 @@
-export default {
+const colors = {
   NC: '\x1B[0m',
   WHITE: '\x1B[1;37m',
   BLACK: '\x1B[0;30m',
@@ -17,3 +17,9 @@ export default {
   GRAY: '\x1B[0;30m',
   LIGHT_GRAY: '\x1B[0;37m'
 };
+
+export default new Proxy(colors, {
+  get(target, name) {
+    return target[name.toUpperCase()];
+  }
+});
