@@ -1,0 +1,11 @@
+// VSCode workspace settings in this file overwrite the default/user settings
+{
+  "editor.rulers": [80, 100],
+  "editor.formatOnSave": true,
+  "eslint.enable": true,
+  "jest.autoEnable": false,
+  "prettier.eslintIntegration": true,
+  "prettier.printWidth": 100,
+  "prettier.singleQuote": true,
+  "editor.tabSize": 2
+}
